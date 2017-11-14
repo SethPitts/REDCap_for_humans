@@ -15,30 +15,31 @@ def get_generic_headers(file_data: list):
     return generic_headers
 
 
-def get_text_data(data_file_path: str, headers: bool) -> OrderedDict:
+def get_text_data(data_file_path: str, headers: bool, delimiter=' ') -> OrderedDict:
     """
     Get data from a .txt file
     :param data_file_path: pathway to file
     :param headers: True if file contains headers, False if file does not contain headers
+    :param delimiter: delimieter that separates the data in the text file. Defaults to space
     :return: OrderedDict containing the file data
     """
     file_data = OrderedDict()
     if headers is True:
         with open(data_file_path, 'r') as text_file:
-            file_data['headers'] = text_file.read().replace('\n', '')  # Assume headers are first line of file
+            file_data['headers'] = text_file.read().replace('\n', '').split(delimiter)  # Assume headers are first line of file
             for row_num, line in enumerate(text_file):
-                file_data[row_num] = line.replace('\n', '')
+                file_data[row_num] = line.replace('\n', '').split(delimiter)
 
             return file_data
 
     if headers is False:
         with open(data_file_path, 'r') as text_file:
-            text_data = [line.replace('\n', '')
+            text_data = [line.replace('\n', '').split(delimiter)
                          for line in text_file
                          ]
             file_data['headers'] = get_generic_headers(text_data)
             for row_num, row in enumerate(text_data):
-                file_data[row_num] = row.replace('\n', '')
+                file_data[row_num] = row
 
             return file_data
 
