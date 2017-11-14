@@ -1,0 +1,2 @@
+Although the final product will most likely use modules like pandas for reading and converting data,
+I am creating a basic module to convert files from scratch as practice.
