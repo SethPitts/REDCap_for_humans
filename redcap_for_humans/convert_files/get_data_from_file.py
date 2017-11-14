@@ -1,15 +1,27 @@
 import csv
+import json
 from collections import OrderedDict
 
 
 def get_generic_headers(file_data: list):
+    """
+    Create generic headers for files that don't contain headers
+    :param file_data: list containing the data from the file
+    :return: list of generic headers to use with the file
+    """
     generic_headers = ['col_{}'.format(row_num)
                        for row_num, _ in file_data
                        ]
     return generic_headers
 
 
-def get_text_data(data_file_path: str, headers: bool):
+def get_text_data(data_file_path: str, headers: bool) -> OrderedDict:
+    """
+    Get data from a .txt file
+    :param data_file_path: pathway to file
+    :param headers: True if file contains headers, False if file does not contain headers
+    :return: OrderedDict containing the file data
+    """
     file_data = OrderedDict()
     if headers is True:
         with open(data_file_path, 'r') as text_file:
@@ -31,10 +43,16 @@ def get_text_data(data_file_path: str, headers: bool):
             return file_data
 
 
-def get_csv_data(data_file_pathway: str, headers: bool):
+def get_csv_data(data_file_path: str, headers: bool):
+    """
+    Get data from a .csv file
+    :param data_file_path: pathway to file
+    :param headers: True if file contains headers, False if file does not contain headers
+    :return: OrderedDict containing the file data
+    """
     file_data = OrderedDict()
     if headers is True:
-        with open(data_file_pathway, 'r') as csv_file:
+        with open(data_file_path, 'r') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             file_data['headers'] = csv_reader.fieldnames
             for row_num, row in enumerate(csv_reader):
@@ -43,7 +61,7 @@ def get_csv_data(data_file_pathway: str, headers: bool):
             return file_data
 
     if headers is False:
-        with open(data_file_pathway, 'r') as csv_file:
+        with open(data_file_path, 'r') as csv_file:
             csv_reader = csv.reader(csv_file)
             csv_data = list(csv_reader)
             file_data['headers'] = get_generic_headers(csv_data)
@@ -51,3 +69,62 @@ def get_csv_data(data_file_pathway: str, headers: bool):
                 file_data[row_num] = row
 
             return file_data
+
+
+def get_tsv_data(data_file_path: str, headers: bool):
+    """
+    Get data from a .tsv file
+    :param data_file_path: pathway to file
+    :param headers: True if file contains headers, False if file does not contain headers
+    :return: OrderedDict containing the file data
+    """
+    file_data = OrderedDict()
+    if headers is True:
+        with open(data_file_path, 'r') as csv_file:
+            csv_reader = csv.DictReader(csv_file, delimiter='\t')
+            file_data['headers'] = csv_reader.fieldnames
+            for row_num, row in enumerate(csv_reader):
+                file_data[row_num] = row
+
+            return file_data
+
+    if headers is False:
+        with open(data_file_path, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter='\t')
+            csv_data = list(csv_reader)
+            file_data['headers'] = get_generic_headers(csv_data)
+            for row_num, row in enumerate(csv_data):
+                file_data[row_num] = row
+
+            return file_data
+
+
+def get_json_data(data_file_path: str, headers: bool):
+    """
+    Get data from a .json file
+    :param data_file_path: pathway to file
+    :param headers: True if file contains headers, False if file does not contain headers
+    :return: OrderedDict containing the file data
+    """
+
+    # TODO: Figure out if json data will always have headers because of the structure of json data
+    file_data = OrderedDict()
+    if headers is True:
+        with open(data_file_path, 'r') as json_file:
+            json_data = json.load(json_file, object_pairs_hook=OrderedDict)
+            file_data['headers'] = list(json_data[1].keys())
+            for row_num, row in enumerate(json_data):
+                file_data[row_num] = row
+
+            return file_data
+
+    if headers is False:
+        with open(data_file_path, 'r') as json_file:
+            json_data = json.load(json_file, object_pairs_hook=OrderedDict)
+            file_data['headers'] = get_generic_headers(list(json_data[1].values))
+            for row_num, row in enumerate(json_data):
+                file_data[row_num] = row
+
+            return file_data
+
+
