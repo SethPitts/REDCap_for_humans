@@ -108,16 +108,18 @@ def get_json_data(data_file_path: str, headers: bool):
     :return: OrderedDict containing the file data
     """
 
-    # TODO: Figure out if json data will always have headers because of the structure of json data
+    # TODO: Will a recursive function into the json data work? For each key in the dicts add the key as a header and
+    # TODO: the values as the data so that file_data of each item is a list of header, value
     file_data = OrderedDict()
     if headers is True:
         with open(data_file_path, 'r') as json_file:
             json_data = json.load(json_file, object_pairs_hook=OrderedDict)
-            file_data['headers'] = list(json_data[1].keys())
-            for row_num, row in enumerate(json_data):
-                file_data[row_num] = row
+            print(json_data)
+            # file_data['headers'] = list(json_data[0].keys())
+            # for row_num, row in enumerate(json_data):
+            #     file_data[row_num] = row
 
-            return file_data
+            return json_data
 
     if headers is False:
         with open(data_file_path, 'r') as json_file:
@@ -127,5 +129,3 @@ def get_json_data(data_file_path: str, headers: bool):
                 file_data[row_num] = row
 
             return file_data
-
-
