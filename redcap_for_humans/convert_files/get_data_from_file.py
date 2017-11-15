@@ -20,13 +20,13 @@ def get_text_data(data_file_path: str, headers: bool, delimiter=' ') -> OrderedD
     Get data from a .txt file
     :param data_file_path: pathway to file
     :param headers: True if file contains headers, False if file does not contain headers
-    :param delimiter: delimieter that separates the data in the text file. Defaults to space
+    :param delimiter: delimiter that separates the data in the text file. Defaults to space
     :return: OrderedDict containing the file data
     """
     file_data = OrderedDict()
     if headers is True:
         with open(data_file_path, 'r') as text_file:
-            file_data['headers'] = text_file.read().replace('\n', '').split(delimiter)  # Assume headers are first line of file
+            file_data['headers'] = text_file.readline().replace('\n', '').split(delimiter)  # Assume headers are first line of file
             for row_num, line in enumerate(text_file):
                 file_data[row_num] = line.replace('\n', '').split(delimiter)
 
