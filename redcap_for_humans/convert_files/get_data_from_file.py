@@ -108,24 +108,56 @@ def get_json_data(data_file_path: str, headers: bool):
     :return: OrderedDict containing the file data
     """
 
-    # TODO: Will a recursive function into the json data work? For each key in the dicts add the key as a header and
-    # TODO: the values as the data so that file_data of each item is a list of header, value
+    # TODO: Flatten out the json file by created list of headers to call each value of the json object
+    # TODO: Use those headers to make calls to the json data
     file_data = OrderedDict()
     if headers is True:
         with open(data_file_path, 'r') as json_file:
             json_data = json.load(json_file, object_pairs_hook=OrderedDict)
-            print(json_data)
-            # file_data['headers'] = list(json_data[0].keys())
-            # for row_num, row in enumerate(json_data):
-            #     file_data[row_num] = row
+            # Get headers
+            if type(json_data) == list:
+                file_data['headers'] = json_data[0].keys()
+                for row_num, row in enumerate(json_data):
+                    file_data[row_num] = row
+                return file_data
 
-            return json_data
+            if type(json_data) == OrderedDict:
+                json_base_objects = list(json_data.keys())
+                for header in json_base_objects:
+                    file_data['{}_headers'.format(header)] = json_data[header][0].keys()
+                    for row_num, row in enumerate(json_data[header]):
+                        file_data['{}_{}'.format(header, row_num)] = row
+                return file_data
 
-    if headers is False:
-        with open(data_file_path, 'r') as json_file:
-            json_data = json.load(json_file, object_pairs_hook=OrderedDict)
-            file_data['headers'] = get_generic_headers(list(json_data[1].values))
-            for row_num, row in enumerate(json_data):
-                file_data[row_num] = row
 
-            return file_data
+def recursive_json_header(json_data, headers=None, header_to_add=None):
+    print(headers)
+    if headers is None:
+        headers = []
+    if type(json_data) not in (list, OrderedDict) or json_data == []:
+        print("base ran")
+        print("appending {}".format(header_to_add))
+        headers.append(header_to_add)
+        return headers
+    if type(json_data) == list:
+        print("list ran")
+        if type(json_data[0]) not in (list, OrderedDict):
+            print("appending {}".format(header_to_add))
+            headers.append(header_to_add)
+        else:
+            recursive_json_header(json_data[0], headers)
+    if type(json_data) == OrderedDict:
+        print("dict ran")
+        possible_headers = json_data.keys()
+        for possible_header in possible_headers:
+            recursive_json_header(json_data[possible_header], headers, possible_header)
+
+def main():
+    with open('test3.json', 'r') as json_file:
+        json_data = json.load(json_file, object_pairs_hook=OrderedDict)
+        headers = recursive_json_header(json_data)
+    print(headers)
+
+
+if __name__ == '__main__':
+    main()
