@@ -129,22 +129,47 @@ def get_json_data(data_file_path: str):
             return file_data
 
 
-def recursive_json_header(json_data, headers=None, header_to_add=None):
+def recursive_json_header(json_data, headers=None, header_to_add=None, base_header=None):
     if headers is None:
-        headers = list()
+        headers = list()  # Initilized header list
+
+    # 1st Base Case if you don't have a list or dict you have a sting or int
     if type(json_data) not in (list, OrderedDict) or json_data == []:
-        headers.append(header_to_add)
+        if base_header is None:
+            headers.append(header_to_add)  # Check to see if there is a base header when appending
+        else:
+            headers.append(base_header + ":" + header_to_add)
+            base_header = None
         return headers
+    # If not base case then you should add the header to base header since we are going deeper into that attribute
+    else:
+        if base_header is None:
+            base_header = header_to_add
+        else:
+            base_header += ":" + header_to_add
+    # if you have a list check to see if it contains objects
     if type(json_data) == list:
+        # If you don't have a list or dict you reached another base case
         if type(json_data[0]) not in (list, OrderedDict):
-            headers.append(header_to_add)
+            if base_header is None:
+                headers.append(header_to_add)
+            else:
+                headers.append(base_header)
+                base_header = None
             return headers
+        # Your list contains objects
         else:
             recursive_json_header(json_data[0], headers)
+    # if you have a dict you know you have a potential header
     if type(json_data) == OrderedDict:
+        # find all potential headers in the dict
         possible_headers = json_data.keys()
+        # for each item in the dict call method on it's values
         for possible_header in possible_headers:
-            recursive_json_header(json_data[possible_header], headers, possible_header)
+            if json_data[possible_header] in (OrderedDict, list):
+                base_header = possible_header
+            recursive_json_header(json_data[possible_header], headers,
+                                  header_to_add=possible_header, base_header=base_header)
     return headers
 
 
@@ -168,11 +193,11 @@ def recursive_json_data(json_data, data=None, header_to_add=None):
 
 
 def main():
-    json_data = get_json_data('test.json')
-    headers = json_data['colors_headers']
+    json_data = get_json_data('test3.json')
+    headers = json_data['headers']
     print(headers)
-    print(json_data['colors_0'])
-    print(json_data['colors_1'])
+    print(json_data[0])
+    print(json_data[1])
     print(len(json_data))
 
 
