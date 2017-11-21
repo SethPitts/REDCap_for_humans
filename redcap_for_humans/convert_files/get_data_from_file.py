@@ -75,17 +75,18 @@ def get_csv_data(data_file_path: str, headers: bool):
             return file_data
 
 
-def get_tsv_data(data_file_path: str, headers: bool):
+def get_delimited_data(data_file_path: str, headers: bool, delimiter):
     """
     Get data from a .tsv file
     :param data_file_path: pathway to file
     :param headers: True if file contains headers, False if file does not contain headers
+    :param delimiter: delimiter that separates values in file
     :return: OrderedDict containing the file data
     """
     file_data = OrderedDict()
     if headers is True:
         with open(data_file_path, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file, delimiter='\t')
+            csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
             file_data['headers'] = csv_reader.fieldnames
             for row_num, row in enumerate(csv_reader):
                 file_data[row_num] = row
@@ -94,7 +95,7 @@ def get_tsv_data(data_file_path: str, headers: bool):
 
     if headers is False:
         with open(data_file_path, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter='\t')
+            csv_reader = csv.reader(csv_file, delimiter=delimiter)
             csv_data = list(csv_reader)
             file_data['headers'] = get_generic_headers(csv_data)
             for row_num, row in enumerate(csv_data):
@@ -106,11 +107,9 @@ def get_json_data(data_file_path: str):
     """
     Get data from a .json file
     :param data_file_path: pathway to file
-    :param headers: True if file contains headers, False if file does not contain headers
     :return: OrderedDict containing the file data
     """
 
-    # TODO: Figure out how to not lose dict names when flattening out json
     file_data = OrderedDict()
     with open(data_file_path, 'r') as json_file:
         json_data = json.load(json_file, object_pairs_hook=OrderedDict)
@@ -140,6 +139,14 @@ def get_json_data(data_file_path: str):
 
 
 def recursive_json_header(json_data, headers=None, header_to_add=None, parent=None):
+    """
+    Recursive dive into a json object to find the headers of the object
+    :param json_data: data to dive into
+    :param headers: list of headers found
+    :param header_to_add: header to add to the list of headers
+    :param parent: parent which may have children
+    :return: list of headers for the objects in the json file
+    """
     if headers is None:
         headers = list()  # Initialized header list
 
@@ -184,22 +191,33 @@ def recursive_json_header(json_data, headers=None, header_to_add=None, parent=No
     return headers
 
 
-def recursive_json_data(json_data, data=None, header_to_add=None):
+def recursive_json_data(json_data, data=None, parent=None):
+    """
+    Recursive dive into a json file to find values of the object
+    :param json_data: json data to dive into
+    :param data: data of the object
+    :param parent: parent which may have data
+    :return: data for objects in json file
+    """
     if data is None:
         data = list()
+    # Base case if you don't have a dict or list you have a value
     if type(json_data) not in (list, OrderedDict) or json_data == []:
         data.append(json_data)
         return data
+    # 2nd Base case. if you have a list and the first value isn't a list or dict you have a value
     if type(json_data) == list:
         if type(json_data[0]) not in (list, OrderedDict):
             data.append(json_data)
             return data
         else:
+            # if you have a list or dict do recursive call on that data
             recursive_json_data(json_data[0], data)
+    # if you have a dict you have parents with children that may have values
     if type(json_data) == OrderedDict:
-        possible_headers = json_data.keys()
-        for possible_header in possible_headers:
-            recursive_json_data(json_data[possible_header], data, possible_header)
+        parents = json_data.keys()
+        for parent in parents:
+            recursive_json_data(json_data[parent], data, parent)
     return data
 
 
