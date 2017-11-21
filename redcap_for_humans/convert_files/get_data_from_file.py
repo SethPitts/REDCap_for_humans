@@ -29,8 +29,10 @@ def get_text_data(data_file_path: str, headers: bool, delimiter=' ') -> OrderedD
             file_data['headers'] = text_file.readline().replace('\n', '').split(
                 delimiter)  # Assume headers are first line of file
             for row_num, line in enumerate(text_file):
-                file_data[row_num] = line.replace('\n', '').split(delimiter)
-
+                data = OrderedDict()
+                for header, value in zip(file_data['headers'], line.replace('\n', '').split(delimiter)):
+                    data[header] = value
+                file_data[row_num] = data
             return file_data
 
     if headers is False:
@@ -40,8 +42,10 @@ def get_text_data(data_file_path: str, headers: bool, delimiter=' ') -> OrderedD
                          ]
             file_data['headers'] = get_generic_headers(text_data)
             for row_num, row in enumerate(text_data):
-                file_data[row_num] = row
-
+                data = OrderedDict()
+                for header, value in zip(file_data['headers'], row):
+                    data[header] = value
+                file_data[row_num] = data
             return file_data
 
 
@@ -59,7 +63,6 @@ def get_csv_data(data_file_path: str, headers: bool):
             file_data['headers'] = csv_reader.fieldnames
             for row_num, row in enumerate(csv_reader):
                 file_data[row_num] = row
-
             return file_data
 
     if headers is False:
@@ -69,7 +72,6 @@ def get_csv_data(data_file_path: str, headers: bool):
             file_data['headers'] = get_generic_headers(csv_data)
             for row_num, row in enumerate(csv_data):
                 file_data[row_num] = row
-
             return file_data
 
 
@@ -97,7 +99,6 @@ def get_tsv_data(data_file_path: str, headers: bool):
             file_data['headers'] = get_generic_headers(csv_data)
             for row_num, row in enumerate(csv_data):
                 file_data[row_num] = row
-
             return file_data
 
 
@@ -117,15 +118,24 @@ def get_json_data(data_file_path: str):
         if type(json_data) == list:
             file_data['headers'] = recursive_json_header(json_data)
             for row_num, row in enumerate(json_data):
-                file_data[row_num] = recursive_json_data(row)
+                row_data = OrderedDict()
+                data = recursive_json_data(row)
+                for header, value in zip(file_data['headers'], data):
+                    row_data[header] = value
+                file_data[row_num] = row_data
             return file_data
 
         if type(json_data) == OrderedDict:
             json_base_objects = list(json_data.keys())
             for header in json_base_objects:
-                file_data['{}_headers'.format(header)] = recursive_json_header(json_data[header])
+                current_header = '{}_headers'.format(header)
+                file_data[current_header] = recursive_json_header(json_data[header])
                 for row_num, row in enumerate(json_data[header]):
-                    file_data['{}_{}'.format(header, row_num)] = recursive_json_data(row)
+                    row_data = OrderedDict()
+                    data = recursive_json_data(row)
+                    for header, value in zip(file_data[current_header], data):
+                        row_data[header] = value
+                    file_data['{}_{}'.format(current_header, row_num)] = row_data
             return file_data
 
 
