@@ -56,6 +56,15 @@ def convert_to_json(outfile_path:str, data:list):
 
 
 def convert_to_sql_table(database_pathway: str, table_title: str, table_fields: list, table_data: list, drop_table: bool):
+    """
+    Converts file with given title , headers and data to a sqlite3 table
+    :param database_pathway: pathway to database to save table to
+    :param table_title: title of table
+    :param table_fields: fields for tables, which are headers of the file
+    :param table_data: rows of table which are rows in file
+    :param drop_table: if True will drop table before attempting to create the table
+    :return: No return
+    """
     conn = sqlite3.connect(database_pathway)
     cur = conn.cursor()
 
