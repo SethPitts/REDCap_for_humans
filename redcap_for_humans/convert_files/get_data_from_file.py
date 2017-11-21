@@ -62,7 +62,10 @@ def get_csv_data(data_file_path: str, headers: bool):
             csv_reader = csv.DictReader(csv_file)
             file_data['headers'] = csv_reader.fieldnames
             for row_num, row in enumerate(csv_reader):
-                file_data[row_num] = row
+                ordered_row = OrderedDict()
+                for header in file_data['headers']:
+                    ordered_row[header] = row[header]
+                file_data[row_num] = ordered_row
             return file_data
 
     if headers is False:
@@ -71,7 +74,10 @@ def get_csv_data(data_file_path: str, headers: bool):
             csv_data = list(csv_reader)
             file_data['headers'] = get_generic_headers(csv_data)
             for row_num, row in enumerate(csv_data):
-                file_data[row_num] = row
+                ordered_row = OrderedDict()
+                for header in file_data['header']:
+                    ordered_row[header] = row[header]
+                file_data[row_num] = ordered_row
             return file_data
 
 
@@ -89,8 +95,10 @@ def get_delimited_data(data_file_path: str, headers: bool, delimiter):
             csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
             file_data['headers'] = csv_reader.fieldnames
             for row_num, row in enumerate(csv_reader):
-                file_data[row_num] = row
-
+                ordered_row = OrderedDict()
+                for header in file_data['headers']:
+                    ordered_row[header] = row[header]
+                file_data[row_num] = ordered_row
             return file_data
 
     if headers is False:
@@ -99,7 +107,10 @@ def get_delimited_data(data_file_path: str, headers: bool, delimiter):
             csv_data = list(csv_reader)
             file_data['headers'] = get_generic_headers(csv_data)
             for row_num, row in enumerate(csv_data):
-                file_data[row_num] = row
+                ordered_row = OrderedDict()
+                for header in file_data['header']:
+                    ordered_row[header] = row[header]
+                file_data[row_num] = ordered_row
             return file_data
 
 
@@ -222,11 +233,9 @@ def recursive_json_data(json_data, data=None, parent=None):
 
 
 def main():
-    json_data = get_json_data('test2.json')
-    print(json_data['headers'])
-    item = zip(json_data['headers'], json_data[0])
-    for key, value in item:
-        print(key, "-----", value)
+    csv_data = get_csv_data('FL_insurance_sample.csv', headers=True)
+    print(csv_data[0].keys())
+    print(csv_data['headers'])
 
 
 if __name__ == '__main__':

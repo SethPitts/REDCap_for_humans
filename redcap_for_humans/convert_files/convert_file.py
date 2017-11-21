@@ -1,6 +1,8 @@
 import csv
 import json
+import sqlite3
 from collections import OrderedDict
+
 
 from redcap_for_humans import convert_files
 
@@ -53,24 +55,53 @@ def convert_to_json(outfile_path:str, data:list):
     print('Finished converting to json. File saved at {}'.format(outfile_path))
 
 
+def convert_to_sql_table(database_pathway: str, table_title: str, table_fields: list, table_data: list, drop_table: bool):
+    conn = sqlite3.connect(database_pathway)
+    cur = conn.cursor()
+
+    table_fields = ",".join(table_fields)
+    if drop_table is True:
+        drop_table_sql = """DROP TABLE IF EXISTS {}""".format(table_title)
+        cur.execute(drop_table_sql)
+
+    # Create Table
+    create_table_sql = """CREATE TABLE {} ({})""".format(
+        table_title, table_fields)
+    print("Creating table {}".format(table_title))
+    cur.execute(create_table_sql)
+
+    # Insert Values Statement
+    for table_row in table_data:
+        transform = "'{}'"
+        data_as_text = ",".join(
+            [transform.format(item.replace("'", "").replace(",", "")) for item in table_row])
+        insert_sql = """INSERT INTO {} VALUES ({})""".format(
+            table_title, data_as_text)
+        cur.execute(insert_sql)
+
+    # Commit the changes
+    conn.commit()
+    print("Done Creating table {} in database {}".format(table_title, database_pathway))
+
+
 def main():
     json_data = convert_files.get_data_from_file.get_json_data('test3.json')
     json_data = iter(json_data.values())
     headers = next(json_data)
     data = [row for row in json_data]
-    convert_to_delimited_file('json_to_tsv.tsv', headers, data)
+    convert_to_delimited_file('json_to_tsv.tsv', headers, data, delimiter='\t')
 
     txt_data = convert_files.get_data_from_file.get_text_data('FL_insurance_sample.txt', headers=True, delimiter=',')
     txt_data = iter(txt_data.values())
     headers = next(txt_data)
     data = [row for row in txt_data]
-    convert_to_delimited_file('txt_to_tsv.tsv', headers, data)
+    convert_to_delimited_file('txt_to_tsv.tsv', headers, data, delimiter='\t')
 
     csv_data = convert_files.get_data_from_file.get_csv_data('FL_insurance_sample.csv', headers=True)
     csv_data = iter(csv_data.values())
     headers = next(csv_data)
     data = [row for row in csv_data]
-    convert_to_delimited_file('csv_to_tsv.tsv', headers, data)
+    convert_to_delimited_file('csv_to_tsv.tsv', headers, data, delimiter='\t')
 
     txt_data = convert_files.get_data_from_file.get_text_data('FL_insurance_sample.txt', headers=True, delimiter=',')
     txt_data.pop('headers')
@@ -88,20 +119,16 @@ def main():
     tsv_data = [tsv_data[key] for key in tsv_data.keys()]
     convert_to_json('tsv_to_json.json', tsv_data)
 
-    test_json = convert_files.get_data_from_file.get_json_data('csv_to_json.json')
-    print(test_json.keys())
-    print(test_json['headers'])
-    print(test_json[0])
-    test_json = convert_files.get_data_from_file.get_json_data('txt_to_json.json')
-    print(test_json.keys())
-    print(test_json['headers'])
-    print(test_json[0])
-    test_json = convert_files.get_data_from_file.get_json_data('tsv_to_json.json')
-    print(test_json.keys())
-    print(test_json['headers'])
-    print(test_json[0])
-    clean_json = json.load(open('test2.json', 'r'), object_pairs_hook=OrderedDict)
-    print(clean_json[0])
+    csv_data_pathway = 'FL_insurance_sample.csv'
+    csv_data = convert_files.get_data_from_file.get_csv_data( csv_data_pathway, headers=True)
+    csv_table_title = csv_data_pathway.replace('.csv', '')
+    csv_data = iter(csv_data.values())
+    csv_table_fields = next(csv_data)
+    print("fields are", csv_table_fields)
+    csv_table_data = [row.values() for row in csv_data]
+    print(csv_table_data)
+    convert_to_sql_table('test.db', csv_table_title, csv_table_fields , csv_table_data, drop_table=True)
+
 
 
 if __name__ == '__main__':
