@@ -1,8 +1,6 @@
 import csv
 import json
 import sqlite3
-from collections import OrderedDict
-
 
 from redcap_for_humans import convert_files
 
@@ -42,7 +40,7 @@ def convert_to_delimited_file(outfile_path: str, headers: list, data: list, deli
     print('Finished converting file. Delimiter is {}. File saved at {}'.format(delimiter, outfile_path))
 
 
-def convert_to_json(outfile_path:str, data:list):
+def convert_to_json(outfile_path: str, data: list):
     """
     Convert given data to json file
     :param outfile_path: pathway to save file
@@ -55,7 +53,8 @@ def convert_to_json(outfile_path:str, data:list):
     print('Finished converting to json. File saved at {}'.format(outfile_path))
 
 
-def convert_to_sql_table(database_pathway: str, table_title: str, table_fields: list, table_data: list, drop_table: bool):
+def convert_to_sql_table(database_pathway: str, table_title: str, table_fields: list, table_data: list,
+                         drop_table: bool):
     """
     Converts file with given title , headers and data to a sqlite3 table
     :param database_pathway: pathway to database to save table to
@@ -93,7 +92,36 @@ def convert_to_sql_table(database_pathway: str, table_title: str, table_fields: 
     print("Done Creating table {} in database {}".format(table_title, database_pathway))
 
 
-def main():
+def test_table_conversion():
+    csv_data_pathway = 'FL_insurance_sample.csv'
+    csv_data = convert_files.get_data_from_file.get_csv_data(csv_data_pathway, headers=True)
+    csv_table_title = csv_data_pathway.replace('.csv', '_csv')
+    csv_data = iter(csv_data.values())
+    csv_table_fields = next(csv_data)
+    print("fields are", csv_table_fields)
+    csv_table_data = [row.values() for row in csv_data]
+    convert_to_sql_table('test.db', csv_table_title, csv_table_fields, csv_table_data, drop_table=True)
+
+    json_data_pathway = 'csv_to_json.json'
+    json_data = convert_files.get_data_from_file.get_json_data(json_data_pathway)
+    json_table_title = json_data_pathway.replace('.json', '_json')
+    json_data = iter(json_data.values())
+    json_table_fields = next(json_data)
+    print('fields are', json_table_fields)
+    json_table_data = [row.values() for row in json_data]
+    convert_to_sql_table('test.db', json_table_title, json_table_fields, json_table_data, drop_table=True)
+
+    txt_data_pathway = 'FL_insurance_sample.txt'
+    txt_data = convert_files.get_data_from_file.get_text_data(txt_data_pathway, headers=True, delimiter=',')
+    txt_table_title = txt_data_pathway.replace('.txt', '_text')
+    txt_data = iter(txt_data.values())
+    txt_table_fields = next(txt_data)
+    print('fields are', txt_table_fields)
+    txt_table_data = [row.values() for row in txt_data]
+    convert_to_sql_table('test.db', txt_table_title, txt_table_fields, txt_table_data, drop_table=True)
+
+
+def test_file_conversion():
     json_data = convert_files.get_data_from_file.get_json_data('test3.json')
     json_data = iter(json_data.values())
     headers = next(json_data)
@@ -123,20 +151,15 @@ def main():
     convert_to_json('csv_to_json.json', csv_data)
 
     tsv_data = convert_files.get_data_from_file.get_delimited_data('nasa_19950801.tsv', headers=True, delimiter='\t')
-    print('tsv headers', tsv_data.pop('headers'))
-    print(tsv_data[0])
     tsv_data = [tsv_data[key] for key in tsv_data.keys()]
     convert_to_json('tsv_to_json.json', tsv_data)
 
-    csv_data_pathway = 'FL_insurance_sample.csv'
-    csv_data = convert_files.get_data_from_file.get_csv_data( csv_data_pathway, headers=True)
-    csv_table_title = csv_data_pathway.replace('.csv', '')
-    csv_data = iter(csv_data.values())
-    csv_table_fields = next(csv_data)
-    print("fields are", csv_table_fields)
-    csv_table_data = [row.values() for row in csv_data]
-    print(csv_table_data)
-    convert_to_sql_table('test.db', csv_table_title, csv_table_fields , csv_table_data, drop_table=True)
+def main():
+    test_file_conversion()
+
+    test_table_conversion()
+
+
 
 
 
