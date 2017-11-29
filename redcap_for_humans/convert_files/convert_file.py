@@ -154,13 +154,11 @@ def test_file_conversion():
     tsv_data = [tsv_data[key] for key in tsv_data.keys()]
     convert_to_json('tsv_to_json.json', tsv_data)
 
+
 def main():
     test_file_conversion()
 
     test_table_conversion()
-
-
-
 
 
 if __name__ == '__main__':
